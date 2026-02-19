@@ -178,7 +178,7 @@ export default function QuestionSection({
                     key={index}
                     onClick={() => handleSelect(option)}
                     disabled={isAnswering}
-                    className={`w-full h-[72px] px-3 py-3 rounded-xl border transition-all duration-200 ${
+                    className={`w-full h-[56px] px-3 py-1.5 rounded-xl border transition-all duration-200 ${
                       isSelected
                         ? 'border-[var(--accent)] bg-[var(--accent-tint-1)]'
                         : 'border-gray-200 bg-white hover:border-[var(--accent)] hover:bg-[var(--accent-tint-1-60)]'
