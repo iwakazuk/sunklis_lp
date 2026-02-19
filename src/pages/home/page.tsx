@@ -2,26 +2,36 @@ import { useNavigate } from 'react-router-dom';
 import carrerImage from '../../assets/carrer.png';
 import topImage from '../../assets/top.png';
 import topConditionImage from '../../assets/top_conditon.png';
+import { FIRST_QUESTION_OPTIONS } from '../../features/diagnosis/config';
+import PageBackground from '../../components/PageBackground';
 
-const firstQuestionOptions = [
-  'キャリアアップを目指したい',
-  'より良い環境があれば検討したい',
-  '方向性に少し迷っている',
-  'まだ具体的には考えていない',
-];
+const FOOTER_LINKS = [
+  {
+    label: 'お問い合せ',
+    href: 'https://sunklis.co.jp/contact/',
+  },
+  {
+    label: '運営会社',
+    href: 'https://sunklis.co.jp/',
+  },
+] as const;
+
+function renderFirstQuestionOptionLabel(optionId: string, optionLabel: string): string {
+  if (optionId === 'q1_better_env') {
+    return 'より良い環境があれば\n検討したい';
+  }
+  return optionLabel;
+}
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const handleStart = (firstAnswer: string) => {
-    navigate('/diagnosis', { state: { firstAnswer } });
+  const handleStart = (firstAnswerId: string) => {
+    navigate('/diagnosis', { state: { firstAnswerId } });
   };
 
   return (
-    <div className="relative min-h-[100dvh] overflow-x-hidden bg-gradient-to-b from-[var(--accent-bg-1)] via-[var(--accent-bg-2)] to-slate-100 flex justify-center py-6 px-4">
-      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[var(--accent-a35)] blur-3xl"></div>
-      <div className="absolute -bottom-28 -right-24 w-80 h-80 rounded-full bg-[var(--accent-a25)] blur-3xl"></div>
-
+    <PageBackground className="min-h-[100dvh] overflow-x-hidden flex justify-center py-6 px-4">
       <div className="w-full max-w-[520px] relative z-10">
         <div className="mb-6 flex justify-center">
           <img src={carrerImage} alt="carrer" className="w-full max-h-12 object-contain" />
@@ -42,14 +52,14 @@ export default function Home() {
             どのように考えていますか？
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {firstQuestionOptions.map((option) => (
+            {FIRST_QUESTION_OPTIONS.map((option) => (
               <button
-                key={option}
-                onClick={() => handleStart(option)}
+                key={option.id}
+                onClick={() => handleStart(option.id)}
                 className="w-full min-h-[84px] flex items-center justify-center text-center px-3 py-4 rounded-xl border border-slate-200 bg-white hover:border-[var(--accent)] hover:bg-[var(--accent-tint-1)] transition-all duration-200 cursor-pointer text-sm font-semibold leading-snug text-slate-700"
               >
                 <span className="whitespace-pre-line">
-                  {option === 'より良い環境があれば検討したい' ? 'より良い環境があれば\n検討したい' : option}
+                  {renderFirstQuestionOptionLabel(option.id, option.label)}
                 </span>
               </button>
             ))}
@@ -69,22 +79,17 @@ export default function Home() {
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-slate-700">
           <span className="underline decoration-slate-400/70 underline-offset-2">利用規約</span>
           <span className="underline decoration-slate-400/70 underline-offset-2">プライバシーポリシー</span>
-          <a
-            href="https://sunklis.co.jp/contact/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline decoration-slate-500/80 underline-offset-2 hover:text-slate-900 transition-colors"
-          >
-            お問い合せ
-          </a>
-          <a
-            href="https://sunklis.co.jp/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline decoration-slate-500/80 underline-offset-2 hover:text-slate-900 transition-colors"
-          >
-            運営会社
-          </a>
+          {FOOTER_LINKS.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-slate-500/80 underline-offset-2 hover:text-slate-900 transition-colors"
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
 
         <p className="text-center mt-4">
@@ -101,6 +106,6 @@ export default function Home() {
           &copy; SUNKLIS, inc. ALL RIGHTS RESERVED.
         </p>
       </div>
-    </div>
+    </PageBackground>
   );
 }

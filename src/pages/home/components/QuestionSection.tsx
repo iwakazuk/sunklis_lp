@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import AdvisorIcon from './AdvisorIcon';
+import type { DiagnosisAnswer, DiagnosisOption } from '../../../features/diagnosis/config';
+import { AdvisorMessage, UserMessage } from './ChatMessage';
 
 interface QuestionSectionProps {
   questionNumber: number;
   question: string;
-  options: string[];
+  options: DiagnosisOption[];
   inputType?: 'buttons' | 'prefecture';
   prefectureOptions?: string[];
-  onAnswer: (answer: string) => void;
-  onSelectAnswer?: () => void;
+  onAnswer: (answer: DiagnosisAnswer) => void;
   previousMessages?: { question: string; answer: string }[];
-  currentAnswer?: string;
+  currentAnswer?: DiagnosisAnswer;
 }
 
 const ANSWER_TRANSITION_MS = 180;
@@ -22,13 +22,14 @@ export default function QuestionSection({
   inputType = 'buttons',
   prefectureOptions = [],
   onAnswer,
-  onSelectAnswer,
   previousMessages = [],
   currentAnswer,
 }: QuestionSectionProps) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(currentAnswer || null);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(currentAnswer?.id || null);
+  const [selectedOptionLabel, setSelectedOptionLabel] = useState<string | null>(currentAnswer?.label || null);
   const [isAnswering, setIsAnswering] = useState(false);
   const [selectedPrefecture, setSelectedPrefecture] = useState('');
+  const fallbackPrefectureOption = options[0];
   const messageScrollRef = useRef<HTMLDivElement | null>(null);
 
   const scrollMessagesToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -40,20 +41,20 @@ export default function QuestionSection({
   };
 
   useEffect(() => {
-    setSelectedOption(currentAnswer || null);
+    setSelectedOptionId(currentAnswer?.id || null);
+    setSelectedOptionLabel(currentAnswer?.label || null);
     setIsAnswering(false);
-    if (inputType === 'prefecture' && currentAnswer && currentAnswer !== '特に決めていない') {
-      setSelectedPrefecture(currentAnswer);
+    if (inputType === 'prefecture' && currentAnswer && prefectureOptions.includes(currentAnswer.label)) {
+      setSelectedPrefecture(currentAnswer.label);
       return;
     }
     setSelectedPrefecture('');
-  }, [currentAnswer, inputType]);
+  }, [currentAnswer, inputType, prefectureOptions]);
 
   useEffect(() => {
-    if (!selectedOption) return;
+    if (!selectedOptionId) return;
     scrollMessagesToBottom('smooth');
-    onSelectAnswer?.();
-  }, [selectedOption, onSelectAnswer]);
+  }, [selectedOptionId]);
 
   useEffect(() => {
     const rafId = requestAnimationFrame(() => {
@@ -62,16 +63,20 @@ export default function QuestionSection({
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  const handleSelect = (option: string) => {
+  const handleSelect = (answer: DiagnosisAnswer) => {
     if (isAnswering) return;
-    setSelectedOption(option);
+    setSelectedOptionId(answer.id);
+    setSelectedOptionLabel(answer.label);
     setIsAnswering(true);
-    setTimeout(() => onAnswer(option), ANSWER_TRANSITION_MS);
+    setTimeout(() => onAnswer(answer), ANSWER_TRANSITION_MS);
   };
 
   const handlePrefectureSubmit = () => {
     if (!selectedPrefecture || isAnswering) return;
-    handleSelect(selectedPrefecture);
+    handleSelect({
+      id: `q5_prefecture_${selectedPrefecture}`,
+      label: selectedPrefecture,
+    });
   };
 
   return (
@@ -80,45 +85,31 @@ export default function QuestionSection({
         {/* 過去のやり取り */}
         {previousMessages.map((msg, idx) => (
           <div key={idx} className="space-y-2">
-            <div className="flex items-end gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-dark)] flex items-center justify-center flex-shrink-0 shadow-sm">
-                <AdvisorIcon className="w-5 h-5" />
-              </div>
-              <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] shadow-sm">
-                <p className="text-sm text-gray-800 leading-relaxed">{msg.question}</p>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <div className="bg-[var(--accent)] text-white rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%] shadow-sm">
-                <p className="text-sm leading-relaxed">{msg.answer}</p>
-              </div>
-            </div>
+            <AdvisorMessage bubbleClassName="py-2.5">
+              <p className="text-sm text-gray-800 leading-relaxed">{msg.question}</p>
+            </AdvisorMessage>
+            <UserMessage>
+              <p className="text-sm leading-relaxed">{msg.answer}</p>
+            </UserMessage>
           </div>
         ))}
 
         {/* 現在の質問 */}
-        <div className="flex items-end gap-2 animate-slideInLeft">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-dark)] flex items-center justify-center flex-shrink-0 shadow-sm">
-            <AdvisorIcon className="w-5 h-5" />
-          </div>
-          <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%] shadow-sm">
-            <span
-              className="inline-block text-[10px] font-bold text-[var(--accent)] bg-[var(--accent-tint-1)] px-2 py-0.5 rounded-full mb-1.5"
-              style={{ fontFamily: 'Montserrat' }}
-            >
-              Q{questionNumber}
-            </span>
-            <p className="text-sm font-medium text-gray-800 leading-relaxed">{question}</p>
-          </div>
-        </div>
+        <AdvisorMessage className="animate-slideInLeft">
+          <span
+            className="inline-block text-[10px] font-bold text-[var(--accent)] bg-[var(--accent-tint-1)] px-2 py-0.5 rounded-full mb-1.5"
+            style={{ fontFamily: 'Montserrat' }}
+          >
+            Q{questionNumber}
+          </span>
+          <p className="text-sm font-medium text-gray-800 leading-relaxed">{question}</p>
+        </AdvisorMessage>
 
         {/* ユーザーの選択済み回答 */}
-        {selectedOption && (
-          <div className="flex justify-end animate-slideInRight">
-            <div className="bg-[var(--accent)] text-white rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%] shadow-sm">
-              <p className="text-sm leading-relaxed">{selectedOption}</p>
-            </div>
-          </div>
+        {selectedOptionLabel && (
+          <UserMessage className="animate-slideInRight">
+            <p className="text-sm leading-relaxed">{selectedOptionLabel}</p>
+          </UserMessage>
         )}
       </div>
 
@@ -154,29 +145,31 @@ export default function QuestionSection({
                 </button>
               </div>
 
+              {fallbackPrefectureOption && (
                 <button
-                  onClick={() => handleSelect('特に決めていない')}
+                  onClick={() => handleSelect({ id: fallbackPrefectureOption.id, label: fallbackPrefectureOption.label })}
                   disabled={isAnswering}
                   className={`w-full text-left px-4 py-3 rounded-xl border text-[15px] leading-[1.4] font-normal transition-all duration-200 ${
-                    selectedOption === '特に決めていない'
-                    ? 'border-[var(--accent)] bg-[var(--accent-tint-1)] text-gray-900'
-                    : 'border-gray-200 bg-white hover:border-[var(--accent)] hover:bg-[var(--accent-tint-1-60)] text-gray-700'
-                } ${isAnswering ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
-              >
-                特に決めていない
-              </button>
+                    selectedOptionId === fallbackPrefectureOption.id
+                      ? 'border-[var(--accent)] bg-[var(--accent-tint-1)] text-gray-900'
+                      : 'border-gray-200 bg-white hover:border-[var(--accent)] hover:bg-[var(--accent-tint-1-60)] text-gray-700'
+                  } ${isAnswering ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                >
+                  {fallbackPrefectureOption.label}
+                </button>
+              )}
             </div>
           </>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2">
               {options.map((option, index) => {
-                const isSelected = selectedOption === option;
+                const isSelected = selectedOptionId === option.id;
 
                 return (
                   <button
-                    key={index}
-                    onClick={() => handleSelect(option)}
+                    key={option.id || index}
+                    onClick={() => handleSelect({ id: option.id, label: option.label })}
                     disabled={isAnswering}
                     className={`w-full h-[56px] px-3 py-1.5 rounded-xl border transition-all duration-200 ${
                       isSelected
@@ -189,7 +182,7 @@ export default function QuestionSection({
                         isSelected ? 'text-gray-900 font-semibold' : 'text-gray-700'
                       }`}
                     >
-                      {option}
+                      {option.label}
                     </span>
                   </button>
                 );

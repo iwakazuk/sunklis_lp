@@ -1,118 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ProgressBar from '../home/components/ProgressBar';
 import QuestionSection from '../home/components/QuestionSection';
 import ResultWithSubmissionSection from '../home/components/ResultWithSubmissionSection';
 import AdvisorIcon from '../home/components/AdvisorIcon';
-
-interface QuestionDefinition {
-  number: number;
-  question: string;
-  options: string[];
-  inputType?: 'buttons' | 'prefecture';
-  prefectureOptions?: string[];
-}
-
-const prefectures = [
-  '北海道',
-  '青森県',
-  '岩手県',
-  '宮城県',
-  '秋田県',
-  '山形県',
-  '福島県',
-  '茨城県',
-  '栃木県',
-  '群馬県',
-  '埼玉県',
-  '千葉県',
-  '東京都',
-  '神奈川県',
-  '新潟県',
-  '富山県',
-  '石川県',
-  '福井県',
-  '山梨県',
-  '長野県',
-  '岐阜県',
-  '静岡県',
-  '愛知県',
-  '三重県',
-  '滋賀県',
-  '京都府',
-  '大阪府',
-  '兵庫県',
-  '奈良県',
-  '和歌山県',
-  '鳥取県',
-  '島根県',
-  '岡山県',
-  '広島県',
-  '山口県',
-  '徳島県',
-  '香川県',
-  '愛媛県',
-  '高知県',
-  '福岡県',
-  '佐賀県',
-  '長崎県',
-  '熊本県',
-  '大分県',
-  '宮崎県',
-  '鹿児島県',
-  '沖縄県',
-];
-
-const questions: QuestionDefinition[] = [
-  {
-    number: 1,
-    question: '今後の働き方について、どのように考えていますか？',
-    options: ['キャリアアップを目指したい', 'より良い環境があれば検討したい', '方向性に少し迷っている', 'まだ具体的には考えていない'],
-  },
-  {
-    number: 2,
-    question: '今後の働き方で、優先したいことは何ですか？',
-    options: ['年収・待遇', '仕事内容', '働く環境（人間関係・社風）', 'ワークライフバランス', 'まだはっきりしていない'],
-  },
-  {
-    number: 3,
-    question: 'いつごろから働きたいですか？',
-    options: ['できるだけ早く（1ヶ月以内）', '3ヶ月以内', '半年以内', 'まだ決めていない'],
-  },
-  {
-    number: 4,
-    question: '現在のご状況に近いものを教えてください。',
-    options: ['在職中（正社員）', '在職中（契約・アルバイトなど）', '離職中', '学生', 'その他'],
-  },
-  {
-    number: 5,
-    question: '希望している勤務地はありますか？',
-    options: ['特に決めていない'],
-    inputType: 'prefecture',
-    prefectureOptions: prefectures,
-  },
-  {
-    number: 6,
-    question: '理想の年収イメージはありますか？',
-    options: ['300万未満', '300–400万', '400–500万', '500万以上', '特に決めていない'],
-  },
-];
+import PageBackground from '../../components/PageBackground';
+import {
+  DIAGNOSIS_QUESTIONS,
+  getFirstQuestionOption,
+  isValidFirstAnswerId,
+  type DiagnosisAnswer,
+} from '../../features/diagnosis/config';
 
 interface DiagnosisLocationState {
-  firstAnswer?: string;
+  firstAnswerId?: string;
 }
 
 export default function DiagnosisPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<number, DiagnosisAnswer>>({});
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const hasAppliedInitialAnswer = useRef(false);
 
-  const totalQuestions = questions.length;
+  const totalQuestions = DIAGNOSIS_QUESTIONS.length;
 
-  const handleAnswer = (questionIndex: number, answer: string) => {
+  const handleAnswer = (questionIndex: number, answer: DiagnosisAnswer) => {
     setAnswers((prev) => ({ ...prev, [questionIndex]: answer }));
     setCurrentStep((prev) => prev + 1);
   };
@@ -123,33 +37,24 @@ export default function DiagnosisPage() {
     }
   };
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    if (!chatScrollRef.current) return;
-    chatScrollRef.current.scrollTo({
-      top: chatScrollRef.current.scrollHeight,
-      behavior,
-    });
-  };
-
   const handleRestart = () => {
     navigate('/');
   };
 
-  const getPreviousMessages = (upTo: number) => {
-    const msgs: { question: string; answer: string }[] = [];
-    for (let i = 1; i < upTo; i++) {
-      if (answers[i]) {
-        msgs.push({
-          question: questions[i - 1].question,
-          answer: answers[i],
-        });
-      }
-    }
-    return msgs;
-  };
-
   const isQuestion = currentStep >= 1 && currentStep <= totalQuestions;
   const isResult = currentStep === totalQuestions + 1;
+  const previousMessages = useMemo(() => {
+    const messages: { question: string; answer: string }[] = [];
+    for (let i = 1; i < currentStep; i++) {
+      const answer = answers[i];
+      if (!answer) continue;
+      messages.push({
+        question: DIAGNOSIS_QUESTIONS[i - 1].question,
+        answer: answer.label,
+      });
+    }
+    return messages;
+  }, [answers, currentStep]);
 
   useEffect(() => {
     if (!isResult) return;
@@ -157,39 +62,39 @@ export default function DiagnosisPage() {
   }, [isResult]);
 
   useEffect(() => {
-    if (!isQuestion) return;
-    const rafId = requestAnimationFrame(() => {
-      scrollToBottom('smooth');
-    });
-    return () => cancelAnimationFrame(rafId);
-  }, [currentStep, isQuestion]);
-
-  useEffect(() => {
     if (hasAppliedInitialAnswer.current) return;
 
     const state = location.state as DiagnosisLocationState | null;
-    const firstAnswer = state?.firstAnswer;
+    const firstAnswerId = state?.firstAnswerId;
 
-    if (!firstAnswer) {
+    if (!firstAnswerId) {
       hasAppliedInitialAnswer.current = true;
       return;
     }
 
-    if (!questions[0].options.includes(firstAnswer)) {
+    if (!isValidFirstAnswerId(firstAnswerId)) {
       hasAppliedInitialAnswer.current = true;
       return;
     }
 
-    setAnswers({ 1: firstAnswer });
+    const firstAnswerOption = getFirstQuestionOption(firstAnswerId);
+    if (!firstAnswerOption) {
+      hasAppliedInitialAnswer.current = true;
+      return;
+    }
+
+    setAnswers({
+      1: {
+        id: firstAnswerOption.id,
+        label: firstAnswerOption.label,
+      },
+    });
     setCurrentStep(2);
     hasAppliedInitialAnswer.current = true;
   }, [location.state]);
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-[var(--accent-bg-1)] via-[var(--accent-bg-2)] to-slate-100 flex items-center justify-center py-3 px-4" style={{ height: '100dvh' }}>
-      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[var(--accent-a35)] blur-3xl"></div>
-      <div className="absolute -bottom-28 -right-24 w-80 h-80 rounded-full bg-[var(--accent-a25)] blur-3xl"></div>
-
+    <PageBackground className="h-[100dvh] flex items-center justify-center py-3 px-4">
       <div className="w-full max-w-[480px] h-full flex flex-col relative z-10">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col flex-1 min-h-0">
           <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-dark)] px-4 py-3 flex items-center gap-3">
@@ -219,14 +124,13 @@ export default function DiagnosisPage() {
             {isQuestion && (
               <QuestionSection
                 key={currentStep}
-                questionNumber={questions[currentStep - 1].number}
-                question={questions[currentStep - 1].question}
-                options={questions[currentStep - 1].options}
-                inputType={questions[currentStep - 1].inputType}
-                prefectureOptions={questions[currentStep - 1].prefectureOptions}
+                questionNumber={DIAGNOSIS_QUESTIONS[currentStep - 1].number}
+                question={DIAGNOSIS_QUESTIONS[currentStep - 1].question}
+                options={DIAGNOSIS_QUESTIONS[currentStep - 1].options}
+                inputType={DIAGNOSIS_QUESTIONS[currentStep - 1].inputType}
+                prefectureOptions={DIAGNOSIS_QUESTIONS[currentStep - 1].prefectureOptions}
                 onAnswer={(answer) => handleAnswer(currentStep, answer)}
-                onSelectAnswer={scrollToBottom}
-                previousMessages={getPreviousMessages(currentStep)}
+                previousMessages={previousMessages}
                 currentAnswer={answers[currentStep]}
               />
             )}
@@ -241,6 +145,6 @@ export default function DiagnosisPage() {
         </div>
 
       </div>
-    </div>
+    </PageBackground>
   );
 }
