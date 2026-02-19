@@ -27,7 +27,7 @@ export default function Home() {
           <img src={carrerImage} alt="carrer" className="w-full max-h-12 object-contain" />
         </div>
 
-        <div className="mb-24 flex justify-center">
+        <div className="mb-16 flex justify-center">
           <img src={topImage} alt="top" className="block w-full h-auto" />
         </div>
 
@@ -35,7 +35,7 @@ export default function Home() {
           <img
             src={topConditionImage}
             alt="top condition"
-            className="pointer-events-none select-none absolute -top-16 right-1 w-60 sm:-top-16 sm:-right-1 sm:w-60 object-contain"
+            className="pointer-events-none select-none absolute -top-16 right-3 w-52 sm:-top-16 sm:-right-3 sm:w-52 object-contain"
           />
           <p className="text-xl font-semibold text-slate-800 leading-relaxed">
             今後の働き方について、<br />
