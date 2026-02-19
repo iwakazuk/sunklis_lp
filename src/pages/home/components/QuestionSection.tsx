@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AdvisorIcon from './AdvisorIcon';
 
 interface QuestionSectionProps {
@@ -29,6 +29,15 @@ export default function QuestionSection({
   const [selectedOption, setSelectedOption] = useState<string | null>(currentAnswer || null);
   const [isAnswering, setIsAnswering] = useState(false);
   const [selectedPrefecture, setSelectedPrefecture] = useState('');
+  const messageScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollMessagesToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (!messageScrollRef.current) return;
+    messageScrollRef.current.scrollTo({
+      top: messageScrollRef.current.scrollHeight,
+      behavior,
+    });
+  };
 
   useEffect(() => {
     setSelectedOption(currentAnswer || null);
@@ -42,8 +51,16 @@ export default function QuestionSection({
 
   useEffect(() => {
     if (!selectedOption) return;
+    scrollMessagesToBottom('smooth');
     onSelectAnswer?.();
   }, [selectedOption, onSelectAnswer]);
+
+  useEffect(() => {
+    const rafId = requestAnimationFrame(() => {
+      scrollMessagesToBottom('auto');
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   const handleSelect = (option: string) => {
     if (isAnswering) return;
@@ -59,7 +76,7 @@ export default function QuestionSection({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 px-4 pt-4 pb-3 overflow-y-auto space-y-3">
+      <div ref={messageScrollRef} className="flex-1 px-4 pt-4 pb-3 overflow-y-auto space-y-3">
         {/* 過去のやり取り */}
         {previousMessages.map((msg, idx) => (
           <div key={idx} className="space-y-2">
@@ -152,7 +169,7 @@ export default function QuestionSection({
           </>
         ) : (
           <>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               {options.map((option, index) => {
                 const isSelected = selectedOption === option;
 
@@ -161,32 +178,19 @@ export default function QuestionSection({
                     key={index}
                     onClick={() => handleSelect(option)}
                     disabled={isAnswering}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 group ${
+                    className={`w-full h-[72px] px-3 py-3 rounded-xl border transition-all duration-200 ${
                       isSelected
                         ? 'border-[var(--accent)] bg-[var(--accent-tint-1)]'
                         : 'border-gray-200 bg-white hover:border-[var(--accent)] hover:bg-[var(--accent-tint-1-60)]'
                     } ${isAnswering ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isSelected ? 'border-[var(--accent)]' : 'border-gray-300 group-hover:border-[var(--accent)]'
-                        }`}
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full transition-colors ${
-                            isSelected ? 'bg-[var(--accent)]' : 'bg-transparent group-hover:bg-[var(--accent)]'
-                          }`}
-                        ></div>
-                      </div>
-                      <span
-                        className={`text-sm transition-colors ${
-                          isSelected ? 'text-gray-900 font-medium' : 'text-gray-700 group-hover:text-gray-900'
-                        }`}
-                      >
-                        {option}
-                      </span>
-                    </div>
+                    <span
+                      className={`block text-sm leading-snug text-center whitespace-pre-line transition-colors ${
+                        isSelected ? 'text-gray-900 font-semibold' : 'text-gray-700'
+                      }`}
+                    >
+                      {option}
+                    </span>
                   </button>
                 );
               })}

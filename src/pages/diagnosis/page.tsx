@@ -123,11 +123,11 @@ export default function DiagnosisPage() {
     }
   };
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (!chatScrollRef.current) return;
     chatScrollRef.current.scrollTo({
       top: chatScrollRef.current.scrollHeight,
-      behavior: 'smooth',
+      behavior,
     });
   };
 
@@ -157,6 +157,14 @@ export default function DiagnosisPage() {
   }, [isResult]);
 
   useEffect(() => {
+    if (!isQuestion) return;
+    const rafId = requestAnimationFrame(() => {
+      scrollToBottom('smooth');
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [currentStep, isQuestion]);
+
+  useEffect(() => {
     if (hasAppliedInitialAnswer.current) return;
 
     const state = location.state as DiagnosisLocationState | null;
@@ -178,7 +186,7 @@ export default function DiagnosisPage() {
   }, [location.state]);
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-[var(--accent-bg-1)] via-[var(--accent-bg-2)] to-slate-100 flex items-center justify-center py-6 px-4" style={{ height: '100dvh' }}>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[var(--accent-bg-1)] via-[var(--accent-bg-2)] to-slate-100 flex items-center justify-center py-3 px-4" style={{ height: '100dvh' }}>
       <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[var(--accent-a35)] blur-3xl"></div>
       <div className="absolute -bottom-28 -right-24 w-80 h-80 rounded-full bg-[var(--accent-a25)] blur-3xl"></div>
 
@@ -232,9 +240,6 @@ export default function DiagnosisPage() {
           </div>
         </div>
 
-        <p className="text-center text-[10px] text-gray-400 mt-3">
-          &copy; SUNKLIS, inc. ALL RIGHTS RESERVED.
-        </p>
       </div>
     </div>
   );
