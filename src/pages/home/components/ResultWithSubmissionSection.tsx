@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { getDiagnosisResultByAnswerIds, type DiagnosisAnswer } from '../../../features/diagnosis/config';
 import {
   DIAGNOSIS_FORM_ENDPOINT,
@@ -24,6 +24,19 @@ const REQUIRED_TEXT_FIELDS: Array<{
   { key: 'email', label: 'メールアドレス', type: 'email', placeholder: 'example@email.com' },
   { key: 'phone', label: '電話番号', type: 'tel', placeholder: '090-1234-5678' },
 ];
+
+const RESULT_SUPPORT_POINTS = [
+  'あなたの志向や状況に合わせてマッチング',
+  '専任アドバイザーが方向性を整理しながらサポート',
+  'ご希望に合わせて柔軟に対応',
+] as const;
+
+function withAnimationDelay(seconds: number): CSSProperties {
+  return {
+    animationDelay: `${seconds}s`,
+    animationFillMode: 'both',
+  };
+}
 
 export default function ResultWithSubmissionSection({ answers, onRestart }: ResultWithSubmissionSectionProps) {
   const [formData, setFormData] = useState<DiagnosisFormData>({
@@ -66,12 +79,12 @@ export default function ResultWithSubmissionSection({ answers, onRestart }: Resu
 
   if (isSubmitted) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 px-4 pt-4 pb-3 overflow-y-auto space-y-3">
+      <div className="flex min-h-full flex-col">
+        <div className="flex-1 px-4 pt-4 pb-3 space-y-3">
           <UserMessage className="animate-slideInRight">
             <p className="text-sm leading-relaxed">情報を送信しました！</p>
           </UserMessage>
-          <AdvisorMessage className="animate-slideInLeft" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+          <AdvisorMessage className="animate-slideInLeft" style={withAnimationDelay(0.3)}>
             <p className="text-sm text-gray-800 leading-relaxed">
               ありがとうございます！🎉<br /><br />
               ご登録いただいたメールアドレス宛に詳しい求人情報をお送りいたします。<br /><br />
@@ -79,7 +92,7 @@ export default function ResultWithSubmissionSection({ answers, onRestart }: Resu
             </p>
           </AdvisorMessage>
         </div>
-        <div className="px-4 pb-4 pt-2 animate-fadeIn" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+        <div className="px-4 pb-4 pt-2 animate-fadeIn" style={withAnimationDelay(0.6)}>
           <button
             onClick={onRestart}
             className="w-full bg-gray-100 text-gray-600 font-medium py-3 px-6 rounded-xl hover:bg-gray-200 transition-all duration-300 whitespace-nowrap cursor-pointer text-sm"
@@ -92,8 +105,8 @@ export default function ResultWithSubmissionSection({ answers, onRestart }: Resu
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 px-4 pt-4 pb-3 overflow-y-auto space-y-3">
+    <div className="flex min-h-full flex-col">
+      <div className="px-4 pt-4 pb-3 space-y-3">
         <AdvisorMessage className="animate-slideInLeft">
           <p className="text-sm text-gray-800 leading-relaxed">
             回答ありがとうございます！<br />診断結果が出ました 🎉
@@ -104,7 +117,7 @@ export default function ResultWithSubmissionSection({ answers, onRestart }: Resu
           className="animate-slideInLeft"
           hideAvatar
           bubbleClassName="py-4"
-          style={{ animationDelay: '0.3s', animationFillMode: 'both' }}
+          style={withAnimationDelay(0.3)}
         >
           <p className="text-xs text-gray-500 mb-2">あなたの診断結果</p>
           <div className="bg-gradient-to-r from-[var(--accent-tint-1)] to-[var(--accent-tint-2)] rounded-xl p-4 mb-3 border border-[var(--accent-tint-3)]">
@@ -118,34 +131,28 @@ export default function ResultWithSubmissionSection({ answers, onRestart }: Resu
           </p>
         </AdvisorMessage>
 
-        <AdvisorMessage className="animate-slideInLeft" hideAvatar style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+        <AdvisorMessage className="animate-slideInLeft" hideAvatar style={withAnimationDelay(0.6)}>
           <p className="text-sm text-gray-800 leading-relaxed mb-2.5">
             あなたにぴったりの求人をご紹介できます👇
           </p>
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs">✅</span>
-              <p className="text-xs text-gray-600">あなたの志向や状況に合わせてマッチング</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs">✅</span>
-              <p className="text-xs text-gray-600">専任アドバイザーが方向性を整理しながらサポート</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs">✅</span>
-              <p className="text-xs text-gray-600">ご希望に合わせて柔軟に対応</p>
-            </div>
+            {RESULT_SUPPORT_POINTS.map((point) => (
+              <div key={point} className="flex items-center gap-2">
+                <span className="text-xs">✅</span>
+                <p className="text-xs text-gray-600">{point}</p>
+              </div>
+            ))}
           </div>
         </AdvisorMessage>
 
-        <AdvisorMessage className="animate-slideInLeft" hideAvatar style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
+        <AdvisorMessage className="animate-slideInLeft" hideAvatar style={withAnimationDelay(0.9)}>
           <p className="text-sm text-gray-800 leading-relaxed">
             あなたに合った求人を無料でお届けします📩<br />
             以下の情報を教えてください。
           </p>
         </AdvisorMessage>
 
-        <div className="animate-fadeIn" style={{ animationDelay: '1.2s', animationFillMode: 'both' }}>
+        <div className="animate-fadeIn" style={withAnimationDelay(1.2)}>
           <form id="career-diagnosis-form" data-readdy-form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3 ml-10">
             {REQUIRED_TEXT_FIELDS.map((field) => (
               <div key={field.key}>

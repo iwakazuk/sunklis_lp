@@ -1,6 +1,7 @@
 export interface DiagnosisOption {
   id: string;
   label: string;
+  displayLabel?: string;
 }
 
 export interface DiagnosisQuestionDefinition {
@@ -74,10 +75,18 @@ export const PREFECTURES = [
 
 export const FIRST_QUESTION_OPTIONS: DiagnosisOption[] = [
   { id: 'q1_career_up', label: 'キャリアアップを目指したい' },
-  { id: 'q1_better_env', label: 'より良い環境があれば検討したい' },
+  {
+    id: 'q1_better_env',
+    label: 'より良い環境があれば検討したい',
+    displayLabel: 'より良い環境があれば\n検討したい',
+  },
   { id: 'q1_unsure_direction', label: '方向性に少し迷っている' },
   { id: 'q1_not_thinking', label: 'まだ具体的には考えていない' },
 ];
+
+const FIRST_QUESTION_OPTIONS_BY_ID = new Map(
+  FIRST_QUESTION_OPTIONS.map((option) => [option.id, option] as const),
+);
 
 export const DIAGNOSIS_QUESTIONS: DiagnosisQuestionDefinition[] = [
   {
@@ -161,12 +170,11 @@ const RESULT_BY_KEY = {
 } as const;
 
 export function isValidFirstAnswerId(answerId?: string): boolean {
-  if (!answerId) return false;
-  return FIRST_QUESTION_OPTIONS.some((option) => option.id === answerId);
+  return Boolean(answerId && FIRST_QUESTION_OPTIONS_BY_ID.has(answerId));
 }
 
 export function getFirstQuestionOption(answerId: string): DiagnosisOption | undefined {
-  return FIRST_QUESTION_OPTIONS.find((option) => option.id === answerId);
+  return FIRST_QUESTION_OPTIONS_BY_ID.get(answerId);
 }
 
 export function getDiagnosisResultByAnswerIds(q1Id?: string, q2Id?: string): DiagnosisResultType {

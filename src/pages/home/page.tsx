@@ -16,13 +16,6 @@ const FOOTER_LINKS = [
   },
 ] as const;
 
-function renderFirstQuestionOptionLabel(optionId: string, optionLabel: string): string {
-  if (optionId === 'q1_better_env') {
-    return 'より良い環境があれば\n検討したい';
-  }
-  return optionLabel;
-}
-
 export default function Home() {
   const navigate = useNavigate();
 
@@ -34,7 +27,7 @@ export default function Home() {
     <PageBackground className="min-h-[100dvh] overflow-x-hidden flex justify-center py-6 px-4">
       <div className="w-full max-w-[520px] relative z-10">
         <div className="mb-6 flex justify-center">
-          <img src={carrerImage} alt="carrer" className="w-full max-h-12 object-contain" />
+          <img src={carrerImage} alt="carrer" className="w-full max-h-8 object-contain" />
         </div>
 
         <div className="mb-16 flex justify-center">
@@ -59,7 +52,7 @@ export default function Home() {
                 className="w-full min-h-[84px] flex items-center justify-center text-center px-3 py-4 rounded-xl border border-slate-200 bg-white hover:border-[var(--accent)] hover:bg-[var(--accent-tint-1)] transition-all duration-200 cursor-pointer text-sm font-semibold leading-snug text-slate-700"
               >
                 <span className="whitespace-pre-line">
-                  {renderFirstQuestionOptionLabel(option.id, option.label)}
+                  {option.displayLabel ?? option.label}
                 </span>
               </button>
             ))}

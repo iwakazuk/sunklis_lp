@@ -1,11 +1,11 @@
-
 interface ProgressBarProps {
   current: number;
   total: number;
 }
 
 export default function ProgressBar({ current, total }: ProgressBarProps) {
-  const percentage = (current / total) * 100;
+  const rawPercentage = total > 0 ? (current / total) * 100 : 0;
+  const percentage = Math.min(100, Math.max(0, rawPercentage));
 
   return (
     <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 px-4 py-2.5 sticky top-0 z-10">

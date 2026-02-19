@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ProgressBar from '../home/components/ProgressBar';
 import QuestionSection from '../home/components/QuestionSection';
@@ -43,6 +43,7 @@ export default function DiagnosisPage() {
 
   const isQuestion = currentStep >= 1 && currentStep <= totalQuestions;
   const isResult = currentStep === totalQuestions + 1;
+  const currentQuestion = isQuestion ? DIAGNOSIS_QUESTIONS[currentStep - 1] : null;
   const previousMessages = useMemo(() => {
     const messages: { question: string; answer: string }[] = [];
     for (let i = 1; i < currentStep; i++) {
@@ -56,10 +57,24 @@ export default function DiagnosisPage() {
     return messages;
   }, [answers, currentStep]);
 
+  const scrollChat = useCallback((to: 'top' | 'bottom', behavior: ScrollBehavior = 'auto') => {
+    if (!chatScrollRef.current) return;
+    const top = to === 'top' ? 0 : chatScrollRef.current.scrollHeight;
+    chatScrollRef.current.scrollTo({ top, behavior });
+  }, []);
+
   useEffect(() => {
     if (!isResult) return;
-    chatScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
-  }, [isResult]);
+    scrollChat('top', 'auto');
+  }, [isResult, scrollChat]);
+
+  useEffect(() => {
+    if (!isQuestion) return;
+    const rafId = requestAnimationFrame(() => {
+      scrollChat('bottom', 'smooth');
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [currentStep, isQuestion, scrollChat]);
 
   useEffect(() => {
     if (hasAppliedInitialAnswer.current) return;
@@ -120,15 +135,18 @@ export default function DiagnosisPage() {
             <ProgressBar current={currentStep} total={totalQuestions} />
           )}
 
-          <div ref={chatScrollRef} className="flex-1 min-h-0 bg-gradient-to-b from-gray-50/80 to-gray-50 overflow-y-auto">
-            {isQuestion && (
+          <div
+            ref={chatScrollRef}
+            className="flex-1 min-h-0 bg-gradient-to-b from-gray-50/80 to-gray-50 overflow-y-auto"
+          >
+            {currentQuestion && (
               <QuestionSection
                 key={currentStep}
-                questionNumber={DIAGNOSIS_QUESTIONS[currentStep - 1].number}
-                question={DIAGNOSIS_QUESTIONS[currentStep - 1].question}
-                options={DIAGNOSIS_QUESTIONS[currentStep - 1].options}
-                inputType={DIAGNOSIS_QUESTIONS[currentStep - 1].inputType}
-                prefectureOptions={DIAGNOSIS_QUESTIONS[currentStep - 1].prefectureOptions}
+                questionNumber={currentQuestion.number}
+                question={currentQuestion.question}
+                options={currentQuestion.options}
+                inputType={currentQuestion.inputType}
+                prefectureOptions={currentQuestion.prefectureOptions}
                 onAnswer={(answer) => handleAnswer(currentStep, answer)}
                 previousMessages={previousMessages}
                 currentAnswer={answers[currentStep]}
