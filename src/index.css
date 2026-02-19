@@ -1,0 +1,86 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    font-family: 'Noto Sans JP';
+  }
+
+  button,
+  input,
+  textarea,
+  select,
+  option {
+    font: inherit;
+  }
+}
+
+:root {
+  --accent: #4c6fff;
+  --accent-dark: #3f5ce0;
+  --accent-darker: #334ac2;
+  --accent-soft: #6a89ff;
+  --accent-tint-1: #edf1ff;
+  --accent-tint-2: #dfe7ff;
+  --accent-tint-3: #d3ddff;
+  --accent-on-dark: #e8edff;
+  --accent-bg-1: #dce4ff;
+  --accent-bg-2: #ecf1ff;
+  --accent-a35: rgba(76, 111, 255, 0.35);
+  --accent-a25: rgba(76, 111, 255, 0.25);
+  --accent-tint-1-60: rgba(237, 241, 255, 0.6);
+}
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-slideInLeft {
+    animation: slideInLeft 0.4s ease-out;
+  }
+
+  .animate-slideInRight {
+    animation: slideInRight 0.3s ease-out;
+  }
+
+  .animate-bubbleIn {
+    animation: bubbleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .animate-typingDots {
+    animation: typingDots 1.2s ease-in-out infinite;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes typingDots {
+    0%, 80%, 100% { opacity: 0.3; }
+    40% { opacity: 1; }
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+}
